@@ -6,9 +6,7 @@ MAX = 1      # COMPUTER
 MIN = -1     # HUMAN
 
 
-# ==============================
-# Classe MancalaBoard
-# ==============================
+
 class MancalaBoard:
 
     def __init__(self):
@@ -16,28 +14,28 @@ class MancalaBoard:
         self.board = {
             'A': 4, 'B': 4, 'C': 4, 'D': 4, 'E': 4, 'F': 4,
             'G': 4, 'H': 4, 'I': 4, 'J': 4, 'K': 4, 'L': 4,
-            1: 0,   # Store Player 1
-            2: 0    # Store Player 2
+            1: 0,   
+            2: 0    
         }
 
-        # Pits de chaque joueur
+        
         self.player1_pits = ('A', 'B', 'C', 'D', 'E', 'F')
         self.player2_pits = ('G', 'H', 'I', 'J', 'K', 'L')
 
-        # Pits opposés
+
         self.opposite = {
             'A': 'L', 'B': 'K', 'C': 'J', 'D': 'I', 'E': 'H', 'F': 'G',
             'G': 'F', 'H': 'E', 'I': 'D', 'J': 'C', 'K': 'B', 'L': 'A'
         }
 
-        # Ordre de distribution
+        
         self.next_pit = {
             'A': 'B', 'B': 'C', 'C': 'D', 'D': 'E', 'E': 'F', 'F': 1,
             1: 'G', 'G': 'H', 'H': 'I', 'I': 'J', 'J': 'K', 'K': 'L', 'L': 2,
             2: 'A'
         }
 
-    # Coups possibles pour un joueur
+    
     def possibleMoves(self, player):
         moves = []
         pits = self.player1_pits if player == 'player1' else self.player2_pits
@@ -156,6 +154,14 @@ class Play:
         )
         print("Computer plays:", pit)
         self.game.state.doMove('player1', pit)
+        return pit
+    
+    # Obtenir le meilleur coup de l'ordinateur sans l'exécuter
+    def getComputerMove(self):
+        _, pit = self.MinimaxAlphaBetaPruning(
+            self.game, MAX, 5, -math.inf, math.inf
+        )
+        return pit
 
     # Algorithme Minimax Alpha-Beta (exactement comme l'énoncé)
     def MinimaxAlphaBetaPruning(self, game, player, depth, alpha, beta):
