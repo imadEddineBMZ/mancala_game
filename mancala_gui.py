@@ -68,6 +68,9 @@ class MancalaGUI:
             self.small_font = pygame.font.Font(None, 28)
             self.label_font = pygame.font.Font(None, 32)
         
+        # Police SYSTÈME pour les numéros (sans fichier, toujours disponible)
+        self.number_font = pygame.font.SysFont('Arial', 40, bold=True)
+        
         # Positions des pits
         self.pit_positions = {}
         self.store_positions = {}
@@ -175,7 +178,10 @@ class MancalaGUI:
         self.screen.blit(subtitle, subtitle_rect)
         
         # Bouton 1: Human vs Computer
-        button1_rect = pygame.Rect(WIDTH // 2 - 250, 280, 500, 80)
+        button_width = 1000
+        button_height = 80
+        button1_rect = pygame.Rect(WIDTH // 2 - button_width // 2, 280, button_width, button_height)
+
         mouse_pos = pygame.mouse.get_pos()
         button1_hover = button1_rect.collidepoint(mouse_pos)
         
@@ -189,7 +195,7 @@ class MancalaGUI:
         self.screen.blit(text1, text1_rect)
         
         # Bouton 2: Computer vs Computer
-        button2_rect = pygame.Rect(WIDTH // 2 - 250, 400, 500, 80)
+        button2_rect = pygame.Rect(WIDTH // 2 - 600, 400, 1200, 80)
         button2_hover = button2_rect.collidepoint(mouse_pos)
         
         # Dessiner le bouton 2
@@ -202,7 +208,7 @@ class MancalaGUI:
         self.screen.blit(text2, text2_rect)
         
         # Instructions
-        info = self.small_font.render("Computer 1: Standard AI | Computer 2: Alternative AI", True, TEXT_COLOR)
+        info = self.small_font.render("Standard AI VS Alternative AI", True, TEXT_COLOR)
         info_rect = info.get_rect(center=(WIDTH // 2, 520))
         self.screen.blit(info, info_rect)
         
@@ -344,27 +350,9 @@ class MancalaGUI:
         # Dessiner les graines à l'intérieur
         self.draw_seeds_in_pit(x, y, radius, seeds)
         
-        # Badge pour afficher le nombre de graines
-        badge_radius = 20
-        badge_x = x + radius - 10
-        badge_y = y - radius + 10
-        
-        # Ombre du badge
-        pygame.draw.circle(self.screen, (20, 15, 10), (badge_x + 2, badge_y + 2), badge_radius)
-        
-        # Badge principal (cercle doré)
-        pygame.draw.circle(self.screen, ACCENT_COLOR, (badge_x, badge_y), badge_radius)
-        pygame.draw.circle(self.screen, (180, 140, 25), (badge_x, badge_y), badge_radius - 3)
-        
-        # Nombre dans le badge
-        number_text = self.medium_font.render(str(seeds), True, (255, 255, 255))
-        number_rect = number_text.get_rect(center=(badge_x, badge_y))
-        self.screen.blit(number_text, number_rect)
-        
-        # Label du pit (lettre)
+        # Label du pit (lettre) au-dessus
         label = self.label_font.render(pit_name, True, ACCENT_COLOR)
         label_rect = label.get_rect(center=(x, y - radius - 25))
-        # Ombre du label
         shadow_label = self.label_font.render(pit_name, True, (30, 20, 10))
         shadow_label_rect = shadow_label.get_rect(center=(x + 2, y - radius - 23))
         self.screen.blit(shadow_label, shadow_label_rect)
@@ -400,38 +388,44 @@ class MancalaGUI:
         for cx, cy in corners:
             pygame.draw.rect(self.screen, ACCENT_COLOR, (cx, cy, corner_size, corner_size))
         
-        # Panneau de score décoratif au-dessus du store
-        score_panel_width = 70
-        score_panel_height = 60
-        score_panel_rect = pygame.Rect(
-            rect.centerx - score_panel_width // 2,
-            rect.top - 70,
-            score_panel_width,
-            score_panel_height
-        )
+        # Le numéro sera dessiné ailleurs
+    
+    def draw_numbers(self):
+        """Dessine tous les numéros de manière simple et claire"""
+        # Numéros pour les pits
+        for pit_name, (x, y, radius) in self.pit_positions.items():
+            seeds = self.play.game.state.board[pit_name]
+            
+            # Position sous le pit
+            text_y = y + radius + 20
+            
+            # Fond simple
+            bg_rect = pygame.Rect(x - 30, text_y - 20, 60, 40)
+            pygame.draw.rect(self.screen, (0, 0, 0), bg_rect)
+            pygame.draw.rect(self.screen, (255, 215, 0), bg_rect, 2)
+            
+            # Numéro en blanc
+            text = self.number_font.render(str(seeds), True, (255, 255, 255))
+            text_rect = text.get_rect(center=(x, text_y))
+            self.screen.blit(text, text_rect)
         
-        # Ombre du panneau
-        shadow_panel = score_panel_rect.copy()
-        shadow_panel.x += 3
-        shadow_panel.y += 3
-        pygame.draw.rect(self.screen, (20, 15, 10, 150), shadow_panel, border_radius=10)
-        
-        # Panneau principal
-        pygame.draw.rect(self.screen, (80, 52, 28), score_panel_rect, border_radius=10)
-        pygame.draw.rect(self.screen, ACCENT_COLOR, score_panel_rect, 4, border_radius=10)
-        
-        # Gradient interne
-        inner_panel = score_panel_rect.inflate(-10, -10)
-        pygame.draw.rect(self.screen, (100, 70, 40), inner_panel, border_radius=5)
-        
-        # Score (très visible)
-        score_text = self.large_font.render(str(seeds), True, (255, 255, 255))
-        score_rect = score_text.get_rect(center=score_panel_rect.center)
-        # Ombre du texte
-        shadow_score = self.large_font.render(str(seeds), True, (0, 0, 0))
-        shadow_score_rect = shadow_score.get_rect(center=(score_panel_rect.centerx + 2, score_panel_rect.centery + 2))
-        self.screen.blit(shadow_score, shadow_score_rect)
-        self.screen.blit(score_text, score_rect)
+        # Numéros pour les stores
+        for store_id, rect in self.store_positions.items():
+            seeds = self.play.game.state.board[store_id]
+            
+            # Position au-dessus du store
+            text_y = rect.top - 40
+            text_x = rect.centerx
+            
+            # Fond simple
+            bg_rect = pygame.Rect(text_x - 40, text_y - 25, 80, 50)
+            pygame.draw.rect(self.screen, (0, 0, 0), bg_rect)
+            pygame.draw.rect(self.screen, (255, 215, 0), bg_rect, 3)
+            
+            # Numéro en blanc
+            text = self.number_font.render(str(seeds), True, (255, 255, 255))
+            text_rect = text.get_rect(center=(text_x, text_y))
+            self.screen.blit(text, text_rect)
     
     def get_pit_center(self, pit_id):
         """Retourne le centre d'un pit ou store"""
@@ -477,17 +471,24 @@ class MancalaGUI:
         self.screen.blit(shadow_title, shadow_rect)
         self.screen.blit(title, title_rect)
         
-        # Labels HUMAN et COMPUTER
-        computer_label = self.label_font.render("COMPUTER", True, ACCENT_COLOR)
+        # Labels selon le mode de jeu
+        if self.game_mode == 'computer_vs_computer':
+            label1_text = "AI one"
+            label2_text = "AI two"
+        else:
+            label1_text = "COMPUTER"
+            label2_text = "HUMAN"
+        
+        computer_label = self.label_font.render(label1_text, True, ACCENT_COLOR)
         computer_rect = computer_label.get_rect(topright=(WIDTH - 180, 120))
-        shadow_computer = self.label_font.render("COMPUTER", True, (30, 20, 10))
+        shadow_computer = self.label_font.render(label1_text, True, (30, 20, 10))
         shadow_comp_rect = shadow_computer.get_rect(topright=(WIDTH - 178, 122))
         self.screen.blit(shadow_computer, shadow_comp_rect)
         self.screen.blit(computer_label, computer_rect)
         
-        human_label = self.label_font.render("HUMAN", True, ACCENT_COLOR)
+        human_label = self.label_font.render(label2_text, True, ACCENT_COLOR)
         human_rect = human_label.get_rect(topleft=(180, 120))
-        shadow_human = self.label_font.render("HUMAN", True, (30, 20, 10))
+        shadow_human = self.label_font.render(label2_text, True, (30, 20, 10))
         shadow_human_rect = shadow_human.get_rect(topleft=(182, 122))
         self.screen.blit(shadow_human, shadow_human_rect)
         self.screen.blit(human_label, human_rect)
@@ -521,6 +522,9 @@ class MancalaGUI:
                 is_hovered = dist <= radius
             
             self.draw_pit(pit_name, x, y, radius, seeds, is_hoverable, is_hovered)
+        
+        # Dessiner tous les NUMÉROS par-dessus (dernière étape)
+        self.draw_numbers()
         
         # Dessiner les graines animées par-dessus
         if self.current_animation:
@@ -573,46 +577,68 @@ class MancalaGUI:
         game_over_rect = game_over_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 130))
         self.screen.blit(game_over_text, game_over_rect)
         
+        # Noms des joueurs selon le mode
+        if self.game_mode == 'computer_vs_computer':
+            player1_name = "COMPUTER 1"
+            player2_name = "COMPUTER 2"
+        else:
+            player1_name = "COMPUTER"
+            player2_name = "HUMAN"
+        
         # WINNER
         if winner == "player1":
-            winner_name = "COMPUTER"
-            loser_name = "HUMAN"
+            winner_name = player1_name
+            loser_name = player2_name
         else:
-            winner_name = "HUMAN"
-            loser_name = "COMPUTER"
+            winner_name = player2_name
+            loser_name = player1_name
         
-        winner_text = self.large_font.render(f"WINNER: {winner_name}", True, WINNER_COLOR)
+        winner_text = self.large_font.render(f"WINNER {winner_name}", True, WINNER_COLOR)
         winner_rect = winner_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 60))
-        shadow_winner = self.large_font.render(f"WINNER: {winner_name}", True, (30, 20, 10))
+        shadow_winner = self.large_font.render(f"WINNER {winner_name}", True, (30, 20, 10))
         shadow_winner_rect = shadow_winner.get_rect(center=(WIDTH // 2 + 2, HEIGHT // 2 - 58))
         self.screen.blit(shadow_winner, shadow_winner_rect)
         self.screen.blit(winner_text, winner_rect)
         
         # LOSER
-        loser_text = self.large_font.render(f"LOSER: {loser_name}", True, LOSER_COLOR)
+        loser_text = self.large_font.render(f"LOSER {loser_name}", True, LOSER_COLOR)
         loser_rect = loser_text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
-        shadow_loser = self.large_font.render(f"LOSER: {loser_name}", True, (30, 20, 10))
+        shadow_loser = self.large_font.render(f"LOSER {loser_name}", True, (30, 20, 10))
         shadow_loser_rect = shadow_loser.get_rect(center=(WIDTH // 2 + 2, HEIGHT // 2 + 2))
         self.screen.blit(shadow_loser, shadow_loser_rect)
         self.screen.blit(loser_text, loser_rect)
         
-        # Final Score
-        score_display = f"Final Score: {score}"
-        score_text = self.medium_font.render(score_display, True, TEXT_COLOR)
-        score_rect = score_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 60))
-        shadow_score = self.medium_font.render(score_display, True, (30, 20, 10))
-        shadow_score_rect = shadow_score.get_rect(center=(WIDTH // 2 + 2, HEIGHT // 2 + 62))
-        self.screen.blit(shadow_score, shadow_score_rect)
-        self.screen.blit(score_text, score_rect)
+        # Scores avec la même logique simple que les numéros des pits
+        # Player 1 Score
+        y_pos = HEIGHT // 2 + 70
         
-        # Player scores
-        p1_text = self.small_font.render(f"Computer: {player1_score}", True, TEXT_COLOR)
-        p1_rect = p1_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 100))
-        self.screen.blit(p1_text, p1_rect)
+        # Rectangle fond pour player1
+        p1_rect = pygame.Rect(WIDTH // 2 - 150, y_pos - 20, 120, 45)
+        pygame.draw.rect(self.screen, (0, 0, 0), p1_rect)
+        pygame.draw.rect(self.screen, (255, 215, 0), p1_rect, 3)
         
-        p2_text = self.small_font.render(f"Human: {player2_score}", True, TEXT_COLOR)
-        p2_rect = p2_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 130))
-        self.screen.blit(p2_text, p2_rect)
+        # Texte player1
+        p1_label = self.number_font.render(player1_name, True, (255, 215, 0))
+        p1_label_rect = p1_label.get_rect(center=(WIDTH // 2 - 90, y_pos - 35))
+        self.screen.blit(p1_label, p1_label_rect)
+        
+        p1_score_text = self.number_font.render(str(player1_score), True, (255, 255, 255))
+        p1_score_rect = p1_score_text.get_rect(center=(WIDTH // 2 - 90, y_pos))
+        self.screen.blit(p1_score_text, p1_score_rect)
+        
+        # Rectangle fond pour player2
+        p2_rect = pygame.Rect(WIDTH // 2 + 30, y_pos - 20, 120, 45)
+        pygame.draw.rect(self.screen, (0, 0, 0), p2_rect)
+        pygame.draw.rect(self.screen, (255, 215, 0), p2_rect, 3)
+        
+        # Texte player2
+        p2_label = self.number_font.render(player2_name, True, (255, 215, 0))
+        p2_label_rect = p2_label.get_rect(center=(WIDTH // 2 + 90, y_pos - 35))
+        self.screen.blit(p2_label, p2_label_rect)
+        
+        p2_score_text = self.number_font.render(str(player2_score), True, (255, 255, 255))
+        p2_score_rect = p2_score_text.get_rect(center=(WIDTH // 2 + 90, y_pos))
+        self.screen.blit(p2_score_text, p2_score_rect)
         
         # Instructions
         restart_text = self.small_font.render("Press SPACE to restart or ESC to quit", True, ACCENT_COLOR)
